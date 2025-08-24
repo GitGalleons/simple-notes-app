@@ -1,0 +1,26 @@
+body {
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.note-card {
+  background-color: rgba(50, 50, 50, 0.8);
+  border-left: 4px solid #EDA35A;
+  padding: 15px;
+  border-radius: 6px;
+  transition: transform 0.2s ease;
+}
+
+.note-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 10px rgba(237, 163, 90, 0.4);
+}
+
+.delete-btn {
+  color: #EDA35A;
+  cursor: pointer;
+}
+
+.highlight {
+  background-color: #444;
+  font-weight: bold;
+}
