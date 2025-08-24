@@ -1,12 +1,22 @@
-$(document).ready(function() {
-    // Initialize Toast
+// ...existing code...
+$(document).ready(function () {
     const toast = new bootstrap.Toast(document.getElementById('toastNotification'));
-    
+
+    // helpers
+    function showNotification(message, type = 'success') {
+        $('.toast-body').text(message);
+        $('.toast-header').removeClass('bg-success bg-danger bg-warning').addClass(`bg-${type}`);
+        toast.show();
+        setTimeout(() => {
+            $('.toast-header').removeClass(`bg-${type}`).addClass('bg-success');
+        }, 3000);
+    }
+
     // Display current date
     const now = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     $('#currentDate').text(now.toLocaleDateString('en-US', options));
-    
+
     // Test localStorage availability
     let storageAvailable = true;
     try {
@@ -14,108 +24,16 @@ $(document).ready(function() {
         localStorage.removeItem('test');
     } catch (e) {
         storageAvailable = false;
-        showNotification('LocalStorage is not available. Please run this app on a web server instead of directly from file:// protocol.', 'danger');
+        showNotification('LocalStorage is not available. Run this app from a web server.', 'danger');
     }
-    
-    // Load saved notes from localStorage
-    // let notes = [];
-    // if (storageAvailable) {
-    //     notes = JSON.parse(localStorage.getItem('notes')) || [];
-    // }
-    // let currentNoteId = null;
-    // renderNoteList();
-    
-    // New Note button
-    $('#newNoteBtn').click(function() {
-        currentNoteId = null;
-        $('#noteTitle').val('');
-        $('#noteContent').val('');
-        showNotification('New note ready for editing!');
-    });
-    
-    // Save Note button
-    $('#saveNoteBtn').click(function() {
-        if (!storageAvailable) {
-            showNotification('Cannot save: LocalStorage not available!', 'danger');
-            return;
-        }
-        
-        const title = $('#noteTitle').val().trim();
-        const content = $('#noteContent').val().trim();
-        
-        if (title || content) {
-            const noteEntry = {
-                id: currentNoteId || Date.now().toString(),
-                title: title,
-                content: content,
-                date: new Date().toISOString()  // Use current time for save
-            };
-            
-            // Check if note already exists
-            const noteIndex = notes.findIndex(note => note.id === noteEntry.id);
-            
-            if (noteIndex !== -1) {
-                notes[noteIndex] = noteEntry;
-            } else {
-                notes.unshift(noteEntry);
-            }
-            
-            localStorage.setItem('notes', JSON.stringify(notes));
-            renderNoteList();
-            currentNoteId = noteEntry.id;
-            
-            showNotification('Note saved successfully!');
-        } else {
-            showNotification('Note title or content cannot be empty!', 'danger');
-        }
-    });
-    
-    // Load note for editing
-    $(document).on('click', '.note-item', function() {
-        const noteId = $(this).data('note-id');
-        const note = notes.find(n => n.id === noteId);
-        
-        if (note) {
-            currentNoteId = note.id;
-            $('#noteTitle').val(note.title);
-            $('#noteContent').val(note.content);
-        }
-    });
-    
-    // Delete note
-    $(document).on('click', '.delete-note', function(e) {
-        e.stopPropagation();
-        if (!storageAvailable) {
-            showNotification('Cannot delete: LocalStorage not available!', 'danger');
-            return;
-        }
-        const noteId = $(this).closest('.note-item').data('note-id');
-        notes = notes.filter(note => note.id !== noteId);
-        localStorage.setItem('notes', JSON.stringify(notes));
-        renderNoteList();
-        
-        if (currentNoteId === noteId) {
-            currentNoteId = null;
-            $('#noteTitle').val('');
-            $('#noteContent').val('');
-        }
-        
-        showNotification('Note deleted successfully!', 'warning');
-    });
-    
-    // Search and filter
-    $('#searchInput').on('input', function() {
-        renderNoteList();
-    });
-    
-    // Render note list
-    // ...existing code...
-    // Load saved notes from localStorage (robust parsing + sanitization) 
-    // ...existing code...
-    // Load saved notes (single robust initialization — remove any other `let notes` / `let currentNoteId` duplicates)
+
+    // Single robust state
     let notes = [];
     let currentNoteId = null;
-    if (storageAvailable) {
+
+    function loadNotes() {
+        notes = [];
+        if (!storageAvailable) return;
         try {
             const raw = localStorage.getItem('notes');
             const parsed = raw ? JSON.parse(raw) : [];
@@ -125,8 +43,7 @@ $(document).ready(function() {
             localStorage.removeItem('notes');
             showNotification('Saved notes were corrupted and have been reset.', 'warning');
         }
-
-        // Normalize fields so render/save won't throw
+        // normalize
         notes = notes.map(n => ({
             id: n && n.id ? String(n.id) : Date.now().toString(),
             title: (n && typeof n.title === 'string') ? n.title : (n && n.title ? String(n.title) : ''),
@@ -134,10 +51,16 @@ $(document).ready(function() {
             date: (n && n.date) ? String(n.date) : new Date().toISOString()
         }));
     }
-    renderNoteList();
-// ...existing code...
 
-    // Render note list
+    function saveNotes() {
+        if (!storageAvailable) return;
+        try {
+            localStorage.setItem('notes', JSON.stringify(notes));
+        } catch (e) {
+            showNotification('Failed to save note: LocalStorage quota or permission issue.', 'danger');
+        }
+    }
+
     function renderNoteList() {
         const searchTerm = ($('#searchInput').val() || '').toLowerCase();
         $('#noteList').empty();
@@ -150,9 +73,7 @@ $(document).ready(function() {
 
         if (filteredNotes.length === 0) {
             $('#noteList').append(`
-                <div class="text-center text-muted py-3">
-                    No notes found
-                </div>
+                <div class="text-center text-muted py-3">No notes found</div>
             `);
             return;
         }
@@ -162,7 +83,6 @@ $(document).ready(function() {
             const dateStr = noteDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             const contentSafe = note.content || '';
             const preview = contentSafe.substring(0, 50) + (contentSafe.length > 50 ? '...' : '');
-
             $('#noteList').append(`
                 <div class="list-group-item note-item fade-in" data-note-id="${note.id}">
                     <div class="d-flex justify-content-between align-items-center">
@@ -179,14 +99,71 @@ $(document).ready(function() {
             `);
         });
     }
-// ...existing code...
-    // Show notification
-    function showNotification(message, type = 'success') {
-        $('.toast-body').text(message);
-        $('.toast-header').removeClass('bg-success bg-danger bg-warning').addClass(`bg-${type}`);
-        toast.show();
-        setTimeout(() => {
-            $('.toast-header').removeClass(`bg-${type}`).addClass('bg-success');
-        }, 3000);
-    }
+
+    // actions
+    $('#newNoteBtn').on('click', () => {
+        currentNoteId = null;
+        $('#noteTitle').val('');
+        $('#noteContent').val('');
+        showNotification('New note ready for editing!');
+    });
+
+    $('#saveNoteBtn').on('click', () => {
+        if (!storageAvailable) {
+            showNotification('Cannot save: LocalStorage not available!', 'danger');
+            return;
+        }
+        const title = ($('#noteTitle').val() || '').trim();
+        const content = ($('#noteContent').val() || '').trim();
+        if (!title && !content) {
+            showNotification('Note title or content cannot be empty!', 'danger');
+            return;
+        }
+
+        const id = currentNoteId || Date.now().toString();
+        const noteEntry = { id, title, content, date: new Date().toISOString() };
+
+        const idx = notes.findIndex(n => String(n.id) === String(id));
+        if (idx !== -1) notes[idx] = noteEntry;
+        else notes.unshift(noteEntry);
+
+        saveNotes();
+        renderNoteList();
+        currentNoteId = id;
+        showNotification('Note saved successfully!');
+    });
+
+    $(document).on('click', '.note-item', function () {
+        const noteId = $(this).data('note-id');
+        const note = notes.find(n => String(n.id) === String(noteId));
+        if (note) {
+            currentNoteId = note.id;
+            $('#noteTitle').val(note.title);
+            $('#noteContent').val(note.content);
+        }
+    });
+
+    $(document).on('click', '.delete-note', function (e) {
+        e.stopPropagation();
+        if (!storageAvailable) {
+            showNotification('Cannot delete: LocalStorage not available!', 'danger');
+            return;
+        }
+        const noteId = $(this).closest('.note-item').data('note-id');
+        notes = notes.filter(n => String(n.id) !== String(noteId));
+        saveNotes();
+        renderNoteList();
+        if (String(currentNoteId) === String(noteId)) {
+            currentNoteId = null;
+            $('#noteTitle').val('');
+            $('#noteContent').val('');
+        }
+        showNotification('Note deleted successfully!', 'warning');
+    });
+
+    $('#searchInput').on('input', renderNoteList);
+
+    // init
+    loadNotes();
+    renderNoteList();
 });
