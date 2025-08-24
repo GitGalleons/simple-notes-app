@@ -135,3 +135,13 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--primary-light);
 }
+/* ...existing code... */
+
+ /* Ensure muted text is visible on the dark theme */
+.note-item .text-muted,
+.list-group-item .text-muted,
+.card .text-muted,
+#noteList .text-muted {
+    color: var(--secondary-light) !important;
+    opacity: 0.85;
+}
