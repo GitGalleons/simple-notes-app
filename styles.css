@@ -1,26 +1,137 @@
+:root {
+    --primary-light: #CADCAE;
+    --secondary-light: #E1E9C9;
+    --accent: #EDA35A;
+    --background-light: #FEE8D9;
+    --text-dark: #333333;
+    --background-dark: #2A2A2A;
+}
+
 body {
-  font-family: 'Segoe UI', sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow-x: hidden;
+    background-color: var(--background-dark);
+    color: var(--secondary-light);
 }
 
-.note-card {
-  background-color: rgba(50, 50, 50, 0.8);
-  border-left: 4px solid #EDA35A;
-  padding: 15px;
-  border-radius: 6px;
-  transition: transform 0.2s ease;
+.sidebar {
+    background-color: rgba(42, 42, 42, 0.95);
+    border-right: 1px solid var(--accent);
+    height: 100vh;
+    position: sticky;
+    top: 0;
 }
 
-.note-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 10px rgba(237, 163, 90, 0.4);
+.neon-text {
+    color: var(--primary-light);
+    text-shadow: 0 0 8px rgba(202, 220, 174, 0.6);
+    font-weight: 600;
 }
 
-.delete-btn {
-  color: #EDA35A;
-  cursor: pointer;
+.btn-outline-primary {
+    color: var(--primary-light);
+    border-color: var(--primary-light);
 }
 
-.highlight {
-  background-color: #444;
-  font-weight: bold;
+.btn-outline-primary:hover {
+    background-color: var(--primary-light);
+    color: var(--text-dark);
+    box-shadow: 0 0 12px rgba(202, 220, 174, 0.7);
+}
+
+.btn-outline-success {
+    color: var(--accent);
+    border-color: var(--accent);
+}
+
+.btn-outline-success:hover {
+    background-color: var(--accent);
+    color: var(--text-dark);
+    box-shadow: 0 0 12px rgba(237, 163, 90, 0.7);
+}
+
+.note-item {
+    background-color: rgba(50, 50, 50, 0.8);
+    border-left: 3px solid var(--primary-light);
+    margin-bottom: 8px;
+    padding: 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    color: var(--secondary-light);
+}
+
+.note-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 0 15px rgba(202, 220, 174, 0.4);
+}
+
+.list-group-item {
+    background-color: rgba(50, 50, 50, 0.8);
+    color: var(--secondary-light);
+    border-color: var(--accent);
+    margin-bottom: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.list-group-item:hover {
+    background-color: rgba(70, 70, 70, 0.8);
+    border-left: 3px solid var(--primary-light);
+}
+
+.form-control, .form-control:focus {
+    background-color: rgba(50, 50, 50, 0.8);
+    color: var(--secondary-light);
+    border-color: var(--accent);
+}
+
+.card {
+    background-color: rgba(50, 50, 50, 0.8);
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.card-header {
+    background-color: rgba(60, 60, 60, 0.8) !important;
+    border-bottom-color: var(--accent) !important;
+    color: var(--primary-light);
+}
+
+/* Toast Notification */
+.toast-header {
+    background-color: var(--accent) !important;
+    color: var(--text-dark) !important;
+}
+
+.toast-body {
+    background-color: rgba(50, 50, 50, 0.95);
+    color: var(--secondary-light);
+}
+
+/* Animation for new items */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(50, 50, 50, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-light);
 }
