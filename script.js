@@ -18,12 +18,12 @@ $(document).ready(function() {
     }
     
     // Load saved notes from localStorage
-    let notes = [];
-    if (storageAvailable) {
-        notes = JSON.parse(localStorage.getItem('notes')) || [];
-    }
-    let currentNoteId = null;
-    renderNoteList();
+    // let notes = [];
+    // if (storageAvailable) {
+    //     notes = JSON.parse(localStorage.getItem('notes')) || [];
+    // }
+    // let currentNoteId = null;
+    // renderNoteList();
     
     // New Note button
     $('#newNoteBtn').click(function() {
@@ -109,15 +109,45 @@ $(document).ready(function() {
     });
     
     // Render note list
+    // ...existing code...
+    // Load saved notes from localStorage (robust parsing + sanitization) 
+    // ...existing code...
+    // Load saved notes (single robust initialization — remove any other `let notes` / `let currentNoteId` duplicates)
+    let notes = [];
+    let currentNoteId = null;
+    if (storageAvailable) {
+        try {
+            const raw = localStorage.getItem('notes');
+            const parsed = raw ? JSON.parse(raw) : [];
+            notes = Array.isArray(parsed) ? parsed : [];
+        } catch (e) {
+            notes = [];
+            localStorage.removeItem('notes');
+            showNotification('Saved notes were corrupted and have been reset.', 'warning');
+        }
+
+        // Normalize fields so render/save won't throw
+        notes = notes.map(n => ({
+            id: n && n.id ? String(n.id) : Date.now().toString(),
+            title: (n && typeof n.title === 'string') ? n.title : (n && n.title ? String(n.title) : ''),
+            content: (n && typeof n.content === 'string') ? n.content : (n && n.content ? String(n.content) : ''),
+            date: (n && n.date) ? String(n.date) : new Date().toISOString()
+        }));
+    }
+    renderNoteList();
+// ...existing code...
+
+    // Render note list
     function renderNoteList() {
-        const searchTerm = $('#searchInput').val().toLowerCase();
+        const searchTerm = ($('#searchInput').val() || '').toLowerCase();
         $('#noteList').empty();
-        
-        const filteredNotes = notes.filter(note => 
-            note.title.toLowerCase().includes(searchTerm) || 
-            note.content.toLowerCase().includes(searchTerm)
-        );
-        
+
+        const filteredNotes = notes.filter(note => {
+            const title = (note.title || '').toLowerCase();
+            const content = (note.content || '').toLowerCase();
+            return title.includes(searchTerm) || content.includes(searchTerm);
+        });
+
         if (filteredNotes.length === 0) {
             $('#noteList').append(`
                 <div class="text-center text-muted py-3">
@@ -126,12 +156,13 @@ $(document).ready(function() {
             `);
             return;
         }
-        
+
         filteredNotes.forEach(note => {
-            const noteDate = new Date(note.date);
+            const noteDate = new Date(note.date || Date.now());
             const dateStr = noteDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-            const preview = note.content.substring(0, 50) + (note.content.length > 50 ? '...' : '');
-            
+            const contentSafe = note.content || '';
+            const preview = contentSafe.substring(0, 50) + (contentSafe.length > 50 ? '...' : '');
+
             $('#noteList').append(`
                 <div class="list-group-item note-item fade-in" data-note-id="${note.id}">
                     <div class="d-flex justify-content-between align-items-center">
@@ -148,7 +179,7 @@ $(document).ready(function() {
             `);
         });
     }
-    
+// ...existing code...
     // Show notification
     function showNotification(message, type = 'success') {
         $('.toast-body').text(message);
