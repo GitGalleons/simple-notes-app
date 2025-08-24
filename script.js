@@ -7,8 +7,21 @@ $(document).ready(function() {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     $('#currentDate').text(now.toLocaleDateString('en-US', options));
     
+    // Test localStorage availability
+    let storageAvailable = true;
+    try {
+        localStorage.setItem('test', 'test');
+        localStorage.removeItem('test');
+    } catch (e) {
+        storageAvailable = false;
+        showNotification('LocalStorage is not available. Please run this app on a web server instead of directly from file:// protocol.', 'danger');
+    }
+    
     // Load saved notes from localStorage
-    let notes = JSON.parse(localStorage.getItem('notes')) || [];
+    let notes = [];
+    if (storageAvailable) {
+        notes = JSON.parse(localStorage.getItem('notes')) || [];
+    }
     let currentNoteId = null;
     renderNoteList();
     
@@ -22,6 +35,11 @@ $(document).ready(function() {
     
     // Save Note button
     $('#saveNoteBtn').click(function() {
+        if (!storageAvailable) {
+            showNotification('Cannot save: LocalStorage not available!', 'danger');
+            return;
+        }
+        
         const title = $('#noteTitle').val().trim();
         const content = $('#noteContent').val().trim();
         
@@ -30,7 +48,7 @@ $(document).ready(function() {
                 id: currentNoteId || Date.now().toString(),
                 title: title,
                 content: content,
-                date: now.toISOString()
+                date: new Date().toISOString()  // Use current time for save
             };
             
             // Check if note already exists
@@ -67,6 +85,10 @@ $(document).ready(function() {
     // Delete note
     $(document).on('click', '.delete-note', function(e) {
         e.stopPropagation();
+        if (!storageAvailable) {
+            showNotification('Cannot delete: LocalStorage not available!', 'danger');
+            return;
+        }
         const noteId = $(this).closest('.note-item').data('note-id');
         notes = notes.filter(note => note.id !== noteId);
         localStorage.setItem('notes', JSON.stringify(notes));
